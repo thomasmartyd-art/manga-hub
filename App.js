@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { SafeAreaView, View, Text, TextInput, ScrollView, Pressable, StyleSheet, StatusBar, ActivityIndicator } from "react-native";
+import { SafeAreaView, View, Text, TextInput, ScrollView, Pressable, StyleSheet, StatusBar, ActivityIndicator, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const C = { bg:"#090910", panel:"#151522", panel2:"#211D32", purple:"#9A7BFF", white:"#F8F6FF", muted:"#9B98AD", line:"#2B293A" };
@@ -13,7 +13,7 @@ const MANGAS = [
   {id:"frieren",title:"Frieren",genre:"Fantasy · Aventure",status:"En cours",chapters:145,desc:"Après la victoire contre le roi des démons, l'elfe Frieren découvre le temps qui passe et les liens humains.",color:"#548C9A",symbol:"✨"},
   {id:"vinland-saga",title:"Vinland Saga",genre:"Historique · Seinen",status:"Terminé",chapters:220,desc:"Dans l'Europe des Vikings, Thorfinn grandit au milieu de la guerre et de la quête de vengeance.",color:"#826D4D",symbol:"🛡️"}
 ];
-const TABS = [["home","⌂","Accueil"],["catalog","▦","Catalogue"],["library","♡","Bibliothèque"]];
+const TABS = [["home","⌂","Accueil"],["catalog","▦","Catalogue"],["library","♡","Bibliothèque"],["legal","↗","Lire légalement"]];
 
 function Cover({m,large=false}) {
   return <View style={[s.cover,{backgroundColor:m.color},large&&s.coverLarge]}><Text style={[s.symbol,large&&{fontSize:54}]}>{m.symbol}</Text><View style={s.coverBand}><Text style={[s.coverName,large&&{fontSize:13}]} numberOfLines={2}>{m.title.toUpperCase()}</Text></View></View>;
@@ -40,6 +40,7 @@ export default function App() {
       <View style={s.detailHero}><Cover m={selected} large/><View style={{flex:1,gap:9}}><Tag>{selected.status}</Tag><Text style={s.detailTitle}>{selected.title}</Text><Text style={s.muted}>{selected.genre}</Text><Text style={s.muted}>{selected.chapters} chapitres référencés</Text></View></View>
       <Text style={s.section}>Synopsis</Text><Text style={s.body}>{selected.desc}</Text>
       <Pressable onPress={()=>toggle(selected)} style={s.primary}><Text style={s.primaryText}>{saved?"Retirer de ma bibliothèque":"+ Ajouter à ma bibliothèque"}</Text></Pressable>
+      <Pressable onPress={()=>{setSelected(null);setTab("legal");}} style={s.secondary}><Text style={s.secondaryText}>Voir les plateformes de lecture légales  →</Text></Pressable>
       <Text style={s.section}>Mon suivi de lecture</Text><View style={s.progressCard}><Text style={s.muted}>Dernier chapitre lu</Text><Text style={s.chapter}>{saved?.chapter||0} <Text style={s.muted}>/ {selected.chapters}</Text></Text><View style={s.track}><View style={[s.fill,{width:((saved?.chapter||0)/selected.chapters*100)+"%"}]}/></View><View style={s.controls}><Pressable style={s.counter} onPress={()=>step(selected,-1)}><Text style={s.counterText}>−</Text></Pressable><Pressable style={s.counter} onPress={()=>step(selected,1)}><Text style={s.counterText}>+</Text></Pressable></View></View>
       <Text style={s.note}>Données de démonstration à vérifier. MANGA HUB n'héberge aucun scan ni chapitre protégé.</Text>
     </ScrollView></SafeAreaView>;
@@ -50,6 +51,12 @@ export default function App() {
       {tab==="home"&&<><View style={s.hero}><Text style={s.eyebrow}>BIENVENUE DANS TON HUB</Text><Text style={s.heroTitle}>Toute ta passion,{"\n"}une seule <Text style={{color:C.purple}}>destination.</Text></Text><Text style={s.heroSub}>Retrouve tes séries, suis ta lecture et découvre où lire légalement.</Text><Pressable style={s.heroButton} onPress={()=>setTab("catalog")}><Text style={s.heroButtonText}>Explorer le catalogue  →</Text></Pressable></View><View style={s.sectionRow}><Text style={s.section}>À découvrir</Text><Pressable onPress={()=>setTab("catalog")}><Text style={s.link}>Tout voir</Text></Pressable></View>{MANGAS.slice(0,4).map(card)}<View style={s.info}><Text style={s.infoTitle}>✦  La lecture, bien organisée</Text><Text style={s.muted}>Centralise tes séries et garde une trace de tes chapitres lus. Les liens officiels seront ajoutés après vérification.</Text></View></>}
       {tab==="catalog"&&<><Text style={s.pageTitle}>Catalogue</Text><Text style={s.muted}>Trouve ta prochaine série.</Text><TextInput value={query} onChangeText={setQuery} placeholder="Rechercher un manga ou un genre…" placeholderTextColor={C.muted} style={s.search}/><Text style={s.count}>{filtered.length} SÉRIE(S)</Text>{filtered.map(card)}{!filtered.length&&<Text style={s.empty}>Aucun résultat.</Text>}</>}
       {tab==="library"&&<><Text style={s.pageTitle}>Ma bibliothèque</Text><Text style={s.muted}>Tes séries et ton avancement.</Text>{Object.keys(library).length?MANGAS.filter(m=>library[m.id]).map(card):<View style={s.emptyPanel}><Text style={s.emptyIcon}>♡</Text><Text style={s.emptyTitle}>Ta bibliothèque est vide</Text><Text style={s.muted}>Ajoute des mangas depuis le catalogue pour suivre ta lecture.</Text><Pressable onPress={()=>setTab("catalog")} style={s.primary}><Text style={s.primaryText}>Parcourir le catalogue</Text></Pressable></View>}</>}
+      {tab==="legal"&&<><Text style={s.pageTitle}>Lire légalement</Text><Text style={s.muted}>Retrouve les plateformes officielles. La disponibilité de chaque manga dépend des droits, de la langue et du pays.</Text>
+        <Pressable onPress={()=>Linking.openURL("https://mangaplus.shueisha.co.jp/")} style={s.platform}><View style={{flex:1}}><Text style={s.platformTitle}>MANGA Plus by SHUEISHA</Text><Text style={s.muted}>Chapitres officiels, notamment des séries Shueisha. Français disponible sur une sélection.</Text></View><Text style={s.arrow}>↗</Text></Pressable>
+        <Pressable onPress={()=>Linking.openURL("https://www.mangas.io/")} style={s.platform}><View style={{flex:1}}><Text style={s.platformTitle}>Mangas.io</Text><Text style={s.muted}>Catalogue de mangas en français par abonnement.</Text></View><Text style={s.arrow}>↗</Text></Pressable>
+        <Pressable onPress={()=>Linking.openURL("https://www.izneo.com/fr/")} style={s.platform}><View style={{flex:1}}><Text style={s.platformTitle}>izneo</Text><Text style={s.muted}>Achat et lecture numérique de bandes dessinées et mangas.</Text></View><Text style={s.arrow}>↗</Text></Pressable>
+        <View style={s.info}><Text style={s.infoTitle}>À savoir</Text><Text style={s.muted}>Ces liens mènent vers les services officiels. MANGA HUB ne stocke ni ne diffuse de scans. Les catalogues changent : vérifie directement sur chaque plateforme si le titre recherché est disponible.</Text></View>
+      </>}
     </ScrollView><View style={s.tabs}>{TABS.map(([key,icon,label])=><Pressable key={key} onPress={()=>setTab(key)} style={s.tab}><Text style={[s.tabIcon,tab===key&&s.active]}>{icon}</Text><Text style={[s.tabLabel,tab===key&&s.active]}>{label}</Text></Pressable>)}</View>
   </View></SafeAreaView>;
 }
@@ -86,6 +93,10 @@ const s=StyleSheet.create({
  emptyIcon:{color:C.purple,fontSize:42,marginBottom:10},emptyTitle:{color:C.white,fontWeight:"800",fontSize:17,marginBottom:8},
  primary:{backgroundColor:C.purple,borderRadius:12,padding:14,alignItems:"center",marginTop:18},
  primaryText:{color:"#100D1A",fontWeight:"900",fontSize:12},
+ secondary:{borderWidth:1,borderColor:C.line,borderRadius:12,padding:14,alignItems:"center",marginTop:10},
+ secondaryText:{color:C.purple,fontWeight:"800",fontSize:12},
+ platform:{flexDirection:"row",alignItems:"center",backgroundColor:C.panel,borderWidth:1,borderColor:C.line,borderRadius:16,padding:16,marginTop:12,gap:12},
+ platformTitle:{color:C.white,fontSize:15,fontWeight:"800",marginBottom:5},
  back:{paddingVertical:10},detailHero:{flexDirection:"row",gap:17,alignItems:"center",marginTop:12},
  detailTitle:{color:C.white,fontSize:24,fontWeight:"900"},body:{color:"#D0CDDA",fontSize:13,lineHeight:21},
  progressCard:{backgroundColor:C.panel,padding:18,borderRadius:17,borderWidth:1,borderColor:C.line},
