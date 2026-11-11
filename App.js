@@ -1,216 +1,65 @@
-import React, { useMemo, useState } from "react";
-import {
-  SafeAreaView,
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  Pressable,
-  StyleSheet,
-  StatusBar,
-} from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const MANGAS = [
-  { id: "blue-lock", title: "Blue Lock", genre: "Sport", status: "En cours", volumes: "1–20", description: "Après l'élimination du Japon en Coupe du monde, un programme radical rassemble les meilleurs jeunes attaquants pour créer le buteur ultime.", accent: "#4B8DFF", symbol: "⚽" },
-  { id: "chainsaw-man", title: "Chainsaw Man", genre: "Action", status: "En cours", volumes: "1–16", description: "Denji mène une vie difficile jusqu'à sa rencontre avec Pochita. Une histoire déjantée entre démons, action et humour noir.", accent: "#E65D4F", symbol: "🪚" },
-  { id: "dan-da-dan", title: "DAN DA DAN", genre: "Surnaturel", status: "En cours", volumes: "1–4", description: "Deux lycéens que tout oppose se retrouvent plongés dans des phénomènes paranormaux complètement imprévisibles.", accent: "#B56CFF", symbol: "👁" },
-  { id: "mashle", title: "Mashle", genre: "Fantaisie", status: "Terminé", volumes: "1–13", description: "Dans un monde où la magie fait tout, Mash n'a qu'une arme : sa force physique hors norme.", accent: "#A5C96B", symbol: "✦" },
-  { id: "jagaaan", title: "Jagaaan", genre: "Action", status: "Terminé", volumes: "1–12", description: "Un thriller sombre où les désirs les plus enfouis prennent une forme monstrueuse.", accent: "#D5A04D", symbol: "☠" },
-  { id: "one-piece", title: "One Piece", genre: "Aventure", status: "En cours", volumes: "1–", description: "Luffy et son équipage prennent la mer à la recherche du légendaire trésor One Piece.", accent: "#E6B94F", symbol: "☠" },
-  { id: "frieren", title: "Frieren", genre: "Fantaisie", status: "En cours", volumes: "1–", description: "Après la grande aventure, l'elfe Frieren découvre le temps, les souvenirs et les liens qu'elle a tissés.", accent: "#70B9C9", symbol: "❄" },
-  { id: "vinland-saga", title: "Vinland Saga", genre: "Historique", status: "En cours", volumes: "1–", description: "Une fresque historique puissante autour de Thorfinn, de la vengeance et de la quête d'un monde meilleur.", accent: "#C58A59", symbol: "⚔" }
+const C={bg:"#09090F",panel:"#14141F",panel2:"#1B1B29",line:"#29293A",text:"#F7F5FC",muted:"#9291A5",violet:"#9B72FF",green:"#5AD6A0",orange:"#FFB86B"};
+const MANGA=[
+{id:"blue-lock",title:"Blue Lock",author:"Muneyuki Kaneshiro",genre:["Sport","Shōnen"],status:"En cours",volumes:34,year:2018,rating:"9.2",color:"#153C68",accent:"#38BDF8",description:"Pour créer le meilleur attaquant du monde, trois cents jeunes buteurs sont réunis dans un programme impitoyable : Blue Lock."},
+{id:"chainsaw-man",title:"Chainsaw Man",author:"Tatsuki Fujimoto",genre:["Action","Dark fantasy"],status:"En cours",volumes:22,year:2018,rating:"9.0",color:"#7C2929",accent:"#FF6961",description:"Denji mène une vie misérable jusqu'à sa rencontre avec Pochita, le démon-tronçonneuse. Une alliance qui va bouleverser son destin."},
+{id:"dandadan",title:"DAN DA DAN",author:"Yukinobu Tatsu",genre:["Action","Surnaturel"],status:"En cours",volumes:20,year:2021,rating:"9.1",color:"#6337A4",accent:"#D4A5FF",description:"Entre fantômes et extraterrestres, Momo et Okarun se retrouvent embarqués dans des aventures complètement folles."},
+{id:"mashle",title:"Mashle",author:"Hajime Komoto",genre:["Comédie","Fantasy"],status:"Terminé",volumes:18,year:2020,rating:"8.5",color:"#32634C",accent:"#9DE6B8",description:"Dans un monde où la magie fait tout, Mash compense son absence de pouvoirs par une force physique hors norme."},
+{id:"jagaaan",title:"Jagaaan",author:"Muneyuki Kaneshiro",genre:["Seinen","Thriller"],status:"Terminé",volumes:14,year:2017,rating:"8.4",color:"#713D28",accent:"#FFB27C",description:"Une pluie de grenouilles mystérieuses transforme les frustrations humaines en monstres. Un seinen sombre et explosif."},
+{id:"one-piece",title:"One Piece",author:"Eiichiro Oda",genre:["Aventure","Shōnen"],status:"En cours",volumes:113,year:1997,rating:"9.7",color:"#174D55",accent:"#6DE4D0",description:"Monkey D. Luffy prend la mer avec son équipage pour trouver le légendaire trésor One Piece et devenir le roi des pirates."},
+{id:"frieren",title:"Frieren",author:"Kanehito Yamada",genre:["Fantasy","Drame"],status:"En cours",volumes:13,year:2020,rating:"9.4",color:"#3B4770",accent:"#B8C8FF",description:"Après la victoire contre le roi des démons, l'elfe Frieren découvre le poids du temps et la valeur des liens humains."},
+{id:"vinland-saga",title:"Vinland Saga",author:"Makoto Yukimura",genre:["Historique","Seinen"],status:"Terminé",volumes:29,year:2005,rating:"9.5",color:"#67502D",accent:"#EBCB8B",description:"Dans l'Europe des Vikings, Thorfinn grandit au milieu de la guerre et cherche progressivement un autre chemin."}
 ];
+const TABS=[{id:"home",label:"Accueil",icon:"⌂"},{id:"catalog",label:"Catalogue",icon:"▦"},{id:"library",label:"Ma bibliothèque",icon:"▤"}];
 
-const FILTERS = ["Tous", "Action", "Sport", "Fantaisie", "Aventure", "Surnaturel", "Historique"];
+function Cover({item,large=false}){return <View style={[S.cover,{width:large?142:94,height:large?204:134,backgroundColor:item.color}]}><View style={[S.coverGlow,{backgroundColor:item.accent}]}/><Text style={[S.coverSmall,{fontSize:large?9:7}]}>MANGA HUB • COLLECTION</Text><View style={S.coverCenter}><Text numberOfLines={3} style={[S.coverTitle,{fontSize:large?22:15}]}>{item.title.toUpperCase()}</Text><View style={[S.coverRule,{backgroundColor:item.accent}]}/><Text style={S.coverSub}>MANGA</Text></View><Text style={S.coverAuthor}>{item.author.toUpperCase()}</Text></View>}
+function Pill({children,active=false,onPress}){return <TouchableOpacity onPress={onPress} style={[S.pill,active&&S.pillActive]}><Text style={[S.pillText,active&&S.pillTextActive]}>{children}</Text></TouchableOpacity>}
 
-function MangaCard({ manga, saved, onPress, onSave }) {
-  return (
-    <Pressable style={styles.mangaCard} onPress={onPress}>
-      <View style={[styles.cover, { backgroundColor: manga.accent }]}>
-        <Text style={styles.coverSymbol}>{manga.symbol}</Text>
-        <Text style={styles.coverTitle}>{manga.title.toUpperCase()}</Text>
-        <Text style={styles.coverSmall}>MANGA HUB • ÉDITION</Text>
-      </View>
-      <View style={styles.cardInfo}>
-        <View style={styles.cardHeading}>
-          <Text style={styles.cardTitle} numberOfLines={1}>{manga.title}</Text>
-          <Pressable onPress={onSave} hitSlop={10}>
-            <Text style={[styles.bookmark, saved && styles.bookmarkActive]}>{saved ? "♥" : "♡"}</Text>
-          </Pressable>
-        </View>
-        <Text style={styles.muted}>{manga.genre}  •  {manga.status}</Text>
-        <Text style={styles.volumeText}>Tomes : {manga.volumes}</Text>
-      </View>
-    </Pressable>
-  );
+export default function App(){
+const [tab,setTab]=useState("home"),[query,setQuery]=useState(""),[genre,setGenre]=useState("Tout"),[selected,setSelected]=useState(null),[library,setLibrary]=useState([]),[progress,setProgress]=useState({}),[loaded,setLoaded]=useState(false);
+useEffect(()=>{(async()=>{try{const a=await AsyncStorage.getItem("manga-hub-library"),b=await AsyncStorage.getItem("manga-hub-progress");if(a)setLibrary(JSON.parse(a));if(b)setProgress(JSON.parse(b));}catch(e){}setLoaded(true);})();},[]);
+useEffect(()=>{if(loaded)AsyncStorage.setItem("manga-hub-library",JSON.stringify(library)).catch(()=>{});},[library,loaded]);
+useEffect(()=>{if(loaded)AsyncStorage.setItem("manga-hub-progress",JSON.stringify(progress)).catch(()=>{});},[progress,loaded]);
+const genres=["Tout","Action","Shōnen","Seinen","Fantasy","Comédie","Sport","Aventure"];
+const filtered=useMemo(()=>MANGA.filter(m=>(tab!=="library"||library.includes(m.id))&&(genre==="Tout"||m.genre.includes(genre))&&(m.title.toLowerCase().includes(query.toLowerCase())||m.author.toLowerCase().includes(query.toLowerCase()))),[tab,library,genre,query]);
+const toggleLibrary=id=>setLibrary(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);
+const updateProgress=(id,d)=>setProgress(old=>({...old,[id]:Math.max(0,Math.min(MANGA.find(m=>m.id===id).volumes,(old[id]||0)+d))}));
+const getItem=id=>MANGA.find(m=>m.id===id);
+const Header=()=><View style={S.header}><View><Text style={S.brand}>MANGA <Text style={{color:C.violet}}>HUB</Text></Text><Text style={S.brandSub}>TON UNIVERS MANGA, AU MÊME ENDROIT</Text></View><View style={S.avatar}><Text style={S.avatarText}>MH</Text></View></View>;
+const MangaCard=({item})=><TouchableOpacity onPress={()=>setSelected(item)} style={S.mangaCard}><Cover item={item}/><View style={S.cardInfo}><Text style={S.cardTitle} numberOfLines={1}>{item.title}</Text><Text style={S.cardMeta}>{item.author}</Text><View style={S.cardBottom}><Text style={S.rating}>★ {item.rating}</Text><Text style={S.cardStatus}>{item.status}</Text></View>{library.includes(item.id)&&<Text style={S.inLibrary}>✓ DANS MA BIBLIOTHÈQUE</Text>}</View></TouchableOpacity>;
+if(!loaded)return <SafeAreaView style={S.safe}><ActivityIndicator color={C.violet} size="large"/></SafeAreaView>;
+return <SafeAreaView style={S.safe}><StatusBar barStyle="light-content" backgroundColor={C.bg}/><Header/>
+{tab==="home"?<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={S.page}>
+<View style={S.hero}><Text style={S.eyebrow}>BIENVENUE DANS TON HUB</Text><Text style={S.heroTitle}>Toute ta passion{"\n"}manga, <Text style={{color:C.violet}}>au même endroit.</Text></Text><Text style={S.heroText}>Explore, organise tes lectures et retrouve les plateformes officielles.</Text><TouchableOpacity style={S.primaryButton} onPress={()=>setTab("catalog")}><Text style={S.primaryButtonText}>Explorer le catalogue  →</Text></TouchableOpacity><View style={S.heroOrb}/><View style={S.heroOrb2}/></View>
+<View style={S.sectionHeading}><View><Text style={S.sectionTitle}>À découvrir</Text><Text style={S.sectionSub}>Une sélection pour commencer</Text></View><TouchableOpacity onPress={()=>setTab("catalog")}><Text style={S.seeAll}>Tout voir  →</Text></TouchableOpacity></View>
+<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.horizontalList}>{MANGA.slice(0,5).map(m=><MangaCard key={m.id} item={m}/>)}</ScrollView>
+<View style={S.sectionHeading}><View><Text style={S.sectionTitle}>Ma bibliothèque</Text><Text style={S.sectionSub}>{library.length} série{library.length>1?"s":""} enregistrée{library.length>1?"s":""}</Text></View><TouchableOpacity onPress={()=>setTab("library")}><Text style={S.seeAll}>Ouvrir  →</Text></TouchableOpacity></View>
+{library.length===0?<View style={S.emptyBox}><Text style={S.emptyIcon}>▤</Text><Text style={S.emptyTitle}>Ta collection commence ici</Text><Text style={S.emptyText}>Ajoute tes mangas favoris pour suivre tes lectures.</Text></View>:<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.horizontalList}>{library.map(id=>getItem(id)).filter(Boolean).map(m=><MangaCard key={m.id} item={m}/>)}</ScrollView>}
+<View style={S.note}><Text style={S.noteTitle}>Bientôt dans MANGA HUB</Text><Text style={S.noteText}>Alertes de sorties, liens de lecture vérifiés et partage communautaire.</Text></View></ScrollView>
+:<View style={S.pageFlex}><Text style={S.pageTitle}>{tab==="catalog"?"Catalogue manga":"Ma bibliothèque"}</Text><Text style={S.pageSubtitle}>{tab==="catalog"?"Trouve ta prochaine lecture.":"Retrouve tes séries et ton avancement."}</Text>
+<View style={S.searchBox}><Text style={S.searchIcon}>⌕</Text><TextInput value={query} onChangeText={setQuery} placeholder="Rechercher un manga ou un auteur..." placeholderTextColor={C.muted} style={S.searchInput}/>{query.length>0&&<TouchableOpacity onPress={()=>setQuery("")}><Text style={S.clear}>×</Text></TouchableOpacity>}</View>
+<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.genreList}>{genres.map(g=><Pill key={g} active={genre===g} onPress={()=>setGenre(g)}>{g}</Pill>)}</ScrollView>
+<FlatList data={filtered} keyExtractor={item=>item.id} numColumns={2} columnWrapperStyle={S.gridRow} contentContainerStyle={S.gridContent} showsVerticalScrollIndicator={false} renderItem={({item})=><TouchableOpacity onPress={()=>setSelected(item)} style={S.gridCard}><Cover item={item}/><Text style={S.gridTitle} numberOfLines={1}>{item.title}</Text><Text style={S.gridMeta}>{item.genre.join(" • ")}</Text><Text style={S.gridRating}>★ {item.rating}</Text></TouchableOpacity>} ListEmptyComponent={<View style={S.emptyBox}><Text style={S.emptyTitle}>{tab==="library"?"Ta bibliothèque est vide":"Aucun résultat"}</Text><Text style={S.emptyText}>{tab==="library"?"Ajoute une série depuis le catalogue.":"Essaie un autre titre ou un autre genre."}</Text></View>}/></View>}
+<View style={S.tabBar}>{TABS.map(t=><TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setQuery("");setGenre("Tout");}} style={S.tabItem}><Text style={[S.tabIcon,tab===t.id&&S.tabActive]}>{t.icon}</Text><Text style={[S.tabLabel,tab===t.id&&S.tabActive]}>{t.label}</Text>{tab===t.id&&<View style={S.tabDot}/>}</TouchableOpacity>)}</View>
+{selected&&<View style={S.modalLayer}><TouchableOpacity style={S.modalBackdrop} onPress={()=>setSelected(null)}/><View style={S.detailSheet}><View style={S.sheetHandle}/><ScrollView showsVerticalScrollIndicator={false}>
+<View style={S.detailTop}><Cover item={selected} large/><View style={S.detailInfo}><Text style={S.detailEyebrow}>{selected.status.toUpperCase()} • {selected.year}</Text><Text style={S.detailTitle}>{selected.title}</Text><Text style={S.detailAuthor}>{selected.author}</Text><Text style={S.detailRating}>★ {selected.rating} / 10</Text><Text style={S.detailVolumes}>{selected.volumes} tomes</Text></View></View>
+<View style={S.detailTags}>{selected.genre.map(g=><Pill key={g}>{g}</Pill>)}</View><Text style={S.detailSection}>Synopsis</Text><Text style={S.detailDescription}>{selected.description}</Text><Text style={S.detailSection}>Ta lecture</Text>
+<View style={S.progressRow}><Text style={S.progressLabel}>Tomes lus</Text><View style={S.progressControls}><TouchableOpacity style={S.counterButton} onPress={()=>updateProgress(selected.id,-1)}><Text style={S.counterText}>−</Text></TouchableOpacity><Text style={S.progressValue}>{progress[selected.id]||0} / {selected.volumes}</Text><TouchableOpacity style={S.counterButton} onPress={()=>updateProgress(selected.id,1)}><Text style={S.counterText}>+</Text></TouchableOpacity></View></View>
+<TouchableOpacity style={[S.primaryButton,S.fullButton]} onPress={()=>toggleLibrary(selected.id)}><Text style={S.primaryButtonText}>{library.includes(selected.id)?"✓ Retirer de ma bibliothèque":"+ Ajouter à ma bibliothèque"}</Text></TouchableOpacity>
+<Text style={S.legal}>Les informations et liens vers les plateformes de lecture seront enrichis dans les prochaines versions. MANGA HUB ne distribue pas de scans.</Text></ScrollView></View></View>}
+</SafeAreaView>;
 }
 
-export default function App() {
-  const [tab, setTab] = useState("Accueil");
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("Tous");
-  const [saved, setSaved] = useState(["blue-lock", "chainsaw-man"]);
-  const [selected, setSelected] = useState(null);
-
-  const visibleMangas = useMemo(() => MANGAS.filter((manga) => {
-    const matchesQuery = manga.title.toLowerCase().includes(query.toLowerCase());
-    const matchesFilter = filter === "Tous" || manga.genre === filter;
-    const matchesTab = tab !== "Ma bibliothèque" || saved.includes(manga.id);
-    return matchesQuery && matchesFilter && matchesTab;
-  }), [query, filter, tab, saved]);
-
-  const toggleSaved = (id) => setSaved((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
-
-  const changeTab = (nextTab) => {
-    setSelected(null);
-    setTab(nextTab);
-    setQuery("");
-    setFilter("Tous");
-  };
-
-  return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.brand}>MANGA<Text style={styles.brandAccent}> HUB</Text></Text>
-          <Text style={styles.tagline}>TON UNIVERS MANGA, AU MÊME ENDROIT</Text>
-        </View>
-        <View style={styles.avatar}><Text style={styles.avatarText}>MH</Text></View>
-      </View>
-
-      {selected ? (
-        <ScrollView contentContainerStyle={styles.page}>
-          <Pressable onPress={() => setSelected(null)} style={styles.backButton}><Text style={styles.backText}>‹  Retour au catalogue</Text></Pressable>
-          <View style={[styles.detailCover, { backgroundColor: selected.accent }]}>
-            <Text style={styles.detailSymbol}>{selected.symbol}</Text>
-            <Text style={styles.detailCoverTitle}>{selected.title.toUpperCase()}</Text>
-            <Text style={styles.coverSmall}>MANGA HUB • FICHE SÉRIE</Text>
-          </View>
-          <Text style={styles.detailTitle}>{selected.title}</Text>
-          <Text style={styles.muted}>{selected.genre}  •  {selected.status}  •  Tomes {selected.volumes}</Text>
-          <Text style={styles.sectionTitle}>À PROPOS</Text>
-          <Text style={styles.description}>{selected.description}</Text>
-          <Pressable style={styles.primaryButton} onPress={() => toggleSaved(selected.id)}>
-            <Text style={styles.primaryButtonText}>{saved.includes(selected.id) ? "♥  Dans ma bibliothèque" : "+  Ajouter à ma bibliothèque"}</Text>
-          </Pressable>
-          <View style={styles.notice}><Text style={styles.noticeTitle}>Où lire cette série ?</Text><Text style={styles.noticeText}>Les liens vers les plateformes de lecture officielles seront ajoutés et vérifiés dans une prochaine étape.</Text></View>
-        </ScrollView>
-      ) : (
-        <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
-          {tab === "Accueil" && (
-            <>
-              <View style={styles.hero}>
-                <Text style={styles.eyebrow}>BIENVENUE DANS TON QG</Text>
-                <Text style={styles.heroTitle}>Le prochain chapitre{ "\n" }commence ici.</Text>
-                <Text style={styles.heroText}>Retrouve tes séries, explore de nouveaux univers et garde ta lecture à jour.</Text>
-                <Pressable style={styles.heroButton} onPress={() => changeTab("Catalogue")}><Text style={styles.heroButtonText}>Explorer les mangas  →</Text></Pressable>
-              </View>
-              <View style={styles.statsRow}>
-                <View style={styles.statBox}><Text style={styles.statNumber}>{MANGAS.length}</Text><Text style={styles.statLabel}>SÉRIES</Text></View>
-                <View style={styles.statBox}><Text style={styles.statNumber}>{saved.length}</Text><Text style={styles.statLabel}>MA BIBLIOTHÈQUE</Text></View>
-                <View style={styles.statBox}><Text style={styles.statNumber}>01</Text><Text style={styles.statLabel}>ESPACE LECTURE</Text></View>
-              </View>
-              <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>À DÉCOUVRIR</Text><Pressable onPress={() => changeTab("Catalogue")}><Text style={styles.seeAll}>Tout voir →</Text></Pressable></View>
-            </>
-          )}
-
-          {tab !== "Accueil" && <Text style={styles.pageTitle}>{tab === "Catalogue" ? "Explorer" : "Ma bibliothèque"}</Text>}
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Rechercher un manga..."
-            placeholderTextColor="#77758A"
-            style={styles.search}
-            autoCapitalize="none"
-          />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-            {FILTERS.map((item) => (
-              <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filterChip, filter === item && styles.filterChipActive]}>
-                <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-          <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>{tab === "Accueil" ? "SÉLECTION MANGA HUB" : "SÉRIES"}</Text><Text style={styles.resultCount}>{visibleMangas.length} résultat(s)</Text></View>
-          {visibleMangas.length ? visibleMangas.map((manga) => (
-            <MangaCard key={manga.id} manga={manga} saved={saved.includes(manga.id)} onPress={() => setSelected(manga)} onSave={() => toggleSaved(manga.id)} />
-          )) : <View style={styles.empty}><Text style={styles.emptyTitle}>Aucun manga trouvé</Text><Text style={styles.muted}>Essaie une autre recherche ou un autre filtre.</Text></View>}
-          <Text style={styles.footer}>MANGA HUB • VERSION DE DÉMARRAGE</Text>
-        </ScrollView>
-      )}
-
-      <View style={styles.tabBar}>
-        {[["Accueil", "⌂"], ["Catalogue", "▦"], ["Ma bibliothèque", "♡"]].map(([name, icon]) => (
-          <Pressable key={name} onPress={() => changeTab(name)} style={styles.tabItem}>
-            <Text style={[styles.tabIcon, tab === name && styles.tabSelected]}>{icon}</Text>
-            <Text style={[styles.tabLabel, tab === name && styles.tabSelected]}>{name}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0B0A10" },
-  header: { paddingHorizontal: 22, paddingTop: 12, paddingBottom: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#24212D" },
-  brand: { color: "#FFFFFF", fontSize: 24, fontWeight: "900", letterSpacing: 1.4 },
-  brandAccent: { color: "#A78BFA" },
-  tagline: { color: "#777386", fontSize: 8, letterSpacing: 1.4, marginTop: 3, fontWeight: "700" },
-  avatar: { width: 38, height: 38, borderRadius: 14, backgroundColor: "#211B32", borderWidth: 1, borderColor: "#59458A", alignItems: "center", justifyContent: "center" },
-  avatarText: { color: "#C4B5FD", fontWeight: "900", fontSize: 12 },
-  page: { padding: 20, paddingBottom: 34 },
-  hero: { backgroundColor: "#171323", borderRadius: 22, borderWidth: 1, borderColor: "#44345F", padding: 22, marginBottom: 16 },
-  eyebrow: { color: "#B9A1FF", fontSize: 9, letterSpacing: 1.8, fontWeight: "900" },
-  heroTitle: { color: "#FFFFFF", fontSize: 29, lineHeight: 35, fontWeight: "900", marginTop: 12 },
-  heroText: { color: "#B8B3C5", fontSize: 13, lineHeight: 20, marginTop: 10 },
-  heroButton: { backgroundColor: "#8B5CF6", borderRadius: 12, alignSelf: "flex-start", paddingHorizontal: 15, paddingVertical: 12, marginTop: 18 },
-  heroButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
-  statsRow: { flexDirection: "row", gap: 9, marginBottom: 24 },
-  statBox: { flex: 1, backgroundColor: "#15131C", borderRadius: 14, borderWidth: 1, borderColor: "#292532", padding: 12 },
-  statNumber: { color: "#FFFFFF", fontSize: 21, fontWeight: "900" },
-  statLabel: { color: "#858092", fontSize: 7, fontWeight: "800", marginTop: 5, letterSpacing: 0.5 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10, marginBottom: 12 },
-  sectionTitle: { color: "#F2EFFA", fontSize: 11, fontWeight: "900", letterSpacing: 1.2, marginTop: 18, marginBottom: 10 },
-  seeAll: { color: "#B79BFF", fontSize: 11, fontWeight: "700" },
-  search: { height: 46, borderRadius: 13, backgroundColor: "#17151F", borderWidth: 1, borderColor: "#302B3A", paddingHorizontal: 15, color: "#FFFFFF", fontSize: 13, marginBottom: 13 },
-  filters: { gap: 8, paddingBottom: 8 },
-  filterChip: { borderRadius: 30, borderWidth: 1, borderColor: "#393344", paddingHorizontal: 13, paddingVertical: 8, backgroundColor: "#15131C" },
-  filterChipActive: { backgroundColor: "#6D45C3", borderColor: "#9A79F4" },
-  filterText: { color: "#A8A2B4", fontSize: 10, fontWeight: "700" },
-  filterTextActive: { color: "#FFFFFF" },
-  resultCount: { color: "#817B8D", fontSize: 10, marginTop: 18 },
-  mangaCard: { flexDirection: "row", backgroundColor: "#15131C", borderRadius: 16, borderWidth: 1, borderColor: "#2B2734", padding: 10, marginBottom: 10, gap: 13 },
-  cover: { width: 88, height: 112, borderRadius: 9, alignItems: "center", justifyContent: "center", padding: 6, overflow: "hidden" },
-  coverSymbol: { color: "rgba(15,12,20,0.75)", fontSize: 28, fontWeight: "900" },
-  coverTitle: { color: "#17121F", fontSize: 11, fontWeight: "900", textAlign: "center", marginTop: 5 },
-  coverSmall: { color: "rgba(20,16,26,0.65)", fontSize: 5, letterSpacing: 1, fontWeight: "900", marginTop: 5 },
-  cardInfo: { flex: 1, justifyContent: "center" },
-  cardHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  cardTitle: { color: "#FFFFFF", fontSize: 15, fontWeight: "800", flex: 1 },
-  bookmark: { color: "#8B8499", fontSize: 25, paddingHorizontal: 4 },
-  bookmarkActive: { color: "#C4A7FF" },
-  muted: { color: "#928C9E", fontSize: 10, marginTop: 6 },
-  volumeText: { color: "#C0BACA", fontSize: 10, marginTop: 10 },
-  pageTitle: { color: "#FFFFFF", fontSize: 25, fontWeight: "900", marginBottom: 18 },
-  empty: { alignItems: "center", padding: 35, backgroundColor: "#15131C", borderRadius: 15, marginTop: 10 },
-  emptyTitle: { color: "#FFFFFF", fontWeight: "800", marginBottom: 6 },
-  footer: { color: "#5F5A69", textAlign: "center", fontSize: 8, letterSpacing: 1.2, marginTop: 22 },
-  tabBar: { flexDirection: "row", backgroundColor: "#111018", borderTopWidth: 1, borderTopColor: "#2B2734", paddingTop: 10, paddingBottom: 9 },
-  tabItem: { flex: 1, alignItems: "center", gap: 3 },
-  tabIcon: { color: "#777184", fontSize: 21 },
-  tabLabel: { color: "#777184", fontSize: 9, fontWeight: "700" },
-  tabSelected: { color: "#B99AFF" },
-  backButton: { marginBottom: 16 },
-  backText: { color: "#B99AFF", fontSize: 13, fontWeight: "700" },
-  detailCover: { height: 205, borderRadius: 20, alignItems: "center", justifyContent: "center", marginBottom: 20 },
-  detailSymbol: { color: "rgba(15,12,20,0.7)", fontSize: 52, fontWeight: "900" },
-  detailCoverTitle: { color: "#17121F", fontSize: 26, fontWeight: "900", marginTop: 8 },
-  detailTitle: { color: "#FFFFFF", fontSize: 27, fontWeight: "900", marginBottom: 3 },
-  description: { color: "#C2BDCC", fontSize: 14, lineHeight: 22, marginTop: 5, marginBottom: 18 },
-  primaryButton: { backgroundColor: "#8B5CF6", borderRadius: 13, padding: 15, alignItems: "center", marginTop: 5 },
-  primaryButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
-  notice: { backgroundColor: "#17151F", borderRadius: 14, borderWidth: 1, borderColor: "#393044", padding: 15, marginTop: 16 },
-  noticeTitle: { color: "#EDE7FF", fontWeight: "800", fontSize: 12 },
-  noticeText: { color: "#A8A2B4", fontSize: 11, lineHeight: 17, marginTop: 6 }
+const S=StyleSheet.create({
+safe:{flex:1,backgroundColor:C.bg},header:{height:66,paddingHorizontal:20,flexDirection:"row",alignItems:"center",justifyContent:"space-between",borderBottomWidth:1,borderBottomColor:C.line},brand:{fontSize:21,fontWeight:"900",letterSpacing:1.6,color:C.text},brandSub:{fontSize:8,letterSpacing:1.2,color:C.muted,marginTop:2},avatar:{width:36,height:36,borderRadius:13,backgroundColor:"#28213C",borderWidth:1,borderColor:"#4D3C70",alignItems:"center",justifyContent:"center"},avatarText:{color:"#C7B2FF",fontSize:11,fontWeight:"900"},
+page:{paddingBottom:28},pageFlex:{flex:1,paddingHorizontal:18,paddingTop:22},hero:{margin:18,marginTop:20,padding:22,borderRadius:24,backgroundColor:"#171326",overflow:"hidden",minHeight:250,borderWidth:1,borderColor:"#34264F"},eyebrow:{fontSize:9,letterSpacing:1.7,color:"#BDA7FF",fontWeight:"800"},heroTitle:{fontSize:29,lineHeight:35,fontWeight:"900",color:C.text,marginTop:15,maxWidth:290},heroText:{fontSize:12,lineHeight:19,color:"#B7B1C9",marginTop:10,maxWidth:260},primaryButton:{backgroundColor:C.violet,borderRadius:13,paddingVertical:13,paddingHorizontal:16,alignSelf:"flex-start",marginTop:18},primaryButtonText:{fontSize:12,color:"#160E28",fontWeight:"900"},heroOrb:{position:"absolute",width:170,height:170,borderRadius:85,borderWidth:25,borderColor:"#37265B",right:-75,top:10,opacity:.6},heroOrb2:{position:"absolute",width:90,height:90,borderRadius:45,backgroundColor:"#6E4AC0",right:-24,bottom:-48,opacity:.18},
+sectionHeading:{paddingHorizontal:20,marginTop:9,marginBottom:14,flexDirection:"row",justifyContent:"space-between",alignItems:"center"},sectionTitle:{fontSize:18,fontWeight:"900",color:C.text},sectionSub:{fontSize:10,color:C.muted,marginTop:3},seeAll:{fontSize:11,color:"#BCA6FF",fontWeight:"800"},horizontalList:{paddingHorizontal:18,paddingBottom:18},mangaCard:{width:112,marginRight:13},cardInfo:{marginTop:8},cardTitle:{fontSize:12,fontWeight:"800",color:C.text},cardMeta:{fontSize:9,color:C.muted,marginTop:3},cardBottom:{flexDirection:"row",justifyContent:"space-between",marginTop:7,alignItems:"center"},rating:{fontSize:10,color:C.orange,fontWeight:"800"},cardStatus:{fontSize:8,color:C.green},inLibrary:{fontSize:7,color:C.green,marginTop:6,fontWeight:"800"},
+cover:{borderRadius:11,overflow:"hidden",padding:9,justifyContent:"space-between",borderWidth:1,borderColor:"rgba(255,255,255,.15)"},coverGlow:{position:"absolute",width:90,height:90,borderRadius:45,top:-28,right:-24,opacity:.22},coverSmall:{color:"rgba(255,255,255,.65)",fontWeight:"800",letterSpacing:.6},coverCenter:{flex:1,justifyContent:"center"},coverTitle:{fontWeight:"900",color:"#FFFFFF",letterSpacing:.5,lineHeight:25},coverRule:{height:3,width:26,marginTop:8},coverSub:{fontSize:7,color:"rgba(255,255,255,.7)",letterSpacing:2,marginTop:6},coverAuthor:{fontSize:6,color:"rgba(255,255,255,.72)",fontWeight:"700"},
+emptyBox:{marginHorizontal:18,padding:22,backgroundColor:C.panel,borderRadius:18,alignItems:"center",borderWidth:1,borderColor:C.line},emptyIcon:{fontSize:28,color:C.violet,marginBottom:10},emptyTitle:{fontSize:13,fontWeight:"800",color:C.text},emptyText:{fontSize:10,color:C.muted,textAlign:"center",lineHeight:16,marginTop:6},note:{marginHorizontal:18,marginTop:8,padding:16,borderRadius:16,backgroundColor:"#12111D",borderWidth:1,borderColor:"#2E2642"},noteTitle:{fontSize:12,fontWeight:"900",color:"#C9B7FF"},noteText:{fontSize:10,color:C.muted,lineHeight:16,marginTop:5},
+pageTitle:{fontSize:24,fontWeight:"900",color:C.text},pageSubtitle:{fontSize:11,color:C.muted,marginTop:5,marginBottom:18},searchBox:{height:46,borderRadius:13,backgroundColor:C.panel,borderWidth:1,borderColor:C.line,flexDirection:"row",alignItems:"center",paddingHorizontal:13},searchIcon:{fontSize:23,color:C.violet,marginRight:8},searchInput:{flex:1,color:C.text,fontSize:11},clear:{fontSize:21,color:C.muted,paddingHorizontal:5},genreList:{paddingVertical:14,gap:7},pill:{paddingVertical:7,paddingHorizontal:11,borderRadius:20,backgroundColor:C.panel2,borderWidth:1,borderColor:C.line,marginRight:6},pillActive:{backgroundColor:"#30234B",borderColor:C.violet},pillText:{fontSize:9,color:C.muted,fontWeight:"700"},pillTextActive:{color:"#D6C7FF"},gridContent:{paddingBottom:20},gridRow:{justifyContent:"space-between"},gridCard:{width:"48%",backgroundColor:C.panel,padding:11,borderRadius:16,marginBottom:12,borderWidth:1,borderColor:C.line},gridTitle:{fontSize:12,fontWeight:"900",color:C.text,marginTop:9},gridMeta:{fontSize:9,color:C.muted,marginTop:3},gridRating:{fontSize:10,color:C.orange,marginTop:6,fontWeight:"800"},
+tabBar:{height:68,backgroundColor:"#101019",borderTopWidth:1,borderTopColor:C.line,flexDirection:"row",justifyContent:"space-around",alignItems:"center",paddingBottom:5},tabItem:{alignItems:"center",justifyContent:"center",width:"33%",height:60},tabIcon:{fontSize:20,color:C.muted},tabLabel:{fontSize:9,color:C.muted,marginTop:3,fontWeight:"700"},tabActive:{color:"#C3AFFF"},tabDot:{width:4,height:4,borderRadius:2,backgroundColor:C.violet,marginTop:3},
+modalLayer:{...StyleSheet.absoluteFillObject,justifyContent:"flex-end"},modalBackdrop:{...StyleSheet.absoluteFillObject,backgroundColor:"rgba(0,0,0,.72)"},detailSheet:{height:"83%",backgroundColor:"#11111A",borderTopLeftRadius:25,borderTopRightRadius:25,paddingHorizontal:20,paddingTop:12,borderWidth:1,borderColor:C.line},sheetHandle:{width:42,height:4,borderRadius:4,backgroundColor:"#555468",alignSelf:"center",marginBottom:18},detailTop:{flexDirection:"row",gap:16},detailInfo:{flex:1,justifyContent:"center"},detailEyebrow:{fontSize:8,color:C.violet,fontWeight:"900",letterSpacing:1},detailTitle:{fontSize:22,fontWeight:"900",color:C.text,marginTop:8},detailAuthor:{fontSize:10,color:C.muted,marginTop:5},detailRating:{fontSize:12,color:C.orange,fontWeight:"900",marginTop:12},detailVolumes:{fontSize:10,color:C.muted,marginTop:5},detailTags:{flexDirection:"row",flexWrap:"wrap",marginTop:17},detailSection:{fontSize:15,color:C.text,fontWeight:"900",marginTop:20,marginBottom:8},detailDescription:{fontSize:11,color:"#B7B4C4",lineHeight:18},progressRow:{padding:13,backgroundColor:C.panel,borderRadius:13,flexDirection:"row",justifyContent:"space-between",alignItems:"center"},progressLabel:{fontSize:11,color:C.text,fontWeight:"700"},progressControls:{flexDirection:"row",alignItems:"center",gap:12},counterButton:{width:28,height:28,borderRadius:9,backgroundColor:"#30234B",alignItems:"center",justifyContent:"center"},counterText:{fontSize:18,color:"#D7C7FF"},progressValue:{fontSize:11,color:C.text,fontWeight:"800"},fullButton:{alignSelf:"stretch",alignItems:"center",marginTop:17},legal:{fontSize:8,color:"#777588",lineHeight:13,textAlign:"center",marginTop:14,marginBottom:25}
 });
