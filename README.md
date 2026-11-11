@@ -1,26 +1,33 @@
 # MANGA HUB
 
-Application mobile iOS/Android construite avec Expo et React Native.
+Application mobile iOS / Android construite avec Expo et React Native.
 
-## Première version incluse
-- Interface sombre avec accents violets
-- Accueil et catalogue de démonstration
-- Recherche et filtres par genre
-- Fiches séries
-- Bibliothèque personnelle avec favoris
+## Prototype MVP inclus
+- Interface sombre premium avec accents violets
+- Accueil et sélection de mangas
+- Catalogue avec recherche par titre/auteur et filtres par genre
+- Fiches détaillées avec synopsis, statut et nombre de tomes
+- Bibliothèque personnelle
+- Suivi du nombre de tomes lus
+- Sauvegarde locale de la bibliothèque et de la progression sur l'appareil via AsyncStorage
 
-## Lancer le projet
-1. Installer Node.js sur un ordinateur ou utiliser un environnement cloud compatible.
-2. Installer les dépendances avec `npm install`.
-3. Démarrer Expo avec `npx expo start`.
-4. Ouvrir le projet dans Expo Go en scannant le QR code.
+## Démarrage du projet
+Prérequis : Node.js et npm dans un environnement de développement compatible.
 
-## À développer ensuite
-- Sauvegarde persistante et compte utilisateur
-- Suivi des tomes/chapitres lus
-- Flux de nouveautés et notifications
-- Liens de lecture vers les plateformes officielles, vérifiés par pays
-- Backend et modération des liens proposés par la communauté
-- Configuration EAS Build et distribution iOS/Android
+```bash
+npm install
+npx expo start
+```
 
-Les séries et informations présentes dans cette version sont des données de démonstration. L'application ne contient ni scans ni chapitres protégés par le droit d'auteur.
+Ouvrir ensuite le projet dans Expo Go en scannant le QR code affiché par Expo.
+
+## Feuille de route
+1. Vérifier et améliorer le prototype sur iPhone.
+2. Ajouter les liens de lecture vers des plateformes officielles, vérifiés par pays et par série.
+3. Ajouter un flux de nouveautés et des alertes de sorties.
+4. Créer un backend et un compte utilisateur pour synchroniser la bibliothèque.
+5. Ajouter la contribution communautaire avec modération des liens.
+6. Préparer les builds iOS/Android et la distribution.
+
+## Important
+Les séries et informations présentes sont des données de démonstration. Les couvertures sont des compositions typographiques temporaires. Cette version ne contient pas de scans et ne distribue aucun chapitre protégé. Les sorties en temps réel, les liens officiels vérifiés, les comptes, la synchronisation cloud et les notifications ne sont pas encore implémentés.
