@@ -2,32 +2,35 @@
 
 Application mobile iOS / Android construite avec Expo et React Native.
 
-## Prototype MVP inclus
-- Interface sombre premium avec accents violets
-- Accueil et sélection de mangas
-- Catalogue avec recherche par titre/auteur et filtres par genre
-- Fiches détaillées avec synopsis, statut et nombre de tomes
+## Première version de l'application
+- Interface mobile sombre avec accents violets
+- Accueil et catalogue de démonstration
+- Recherche par titre et genre
+- Fiches manga avec synopsis
 - Bibliothèque personnelle
-- Suivi du nombre de tomes lus
-- Sauvegarde locale de la bibliothèque et de la progression sur l'appareil via AsyncStorage
+- Suivi manuel du dernier chapitre lu
+- Sauvegarde locale de la bibliothèque sur l'appareil
 
-## Démarrage du projet
-Prérequis : Node.js et npm dans un environnement de développement compatible.
+## Technologies
+- Expo SDK 54
+- React Native 0.81
+- React 19
+- AsyncStorage pour conserver les données localement
+- EAS Build configuré dans `eas.json`
 
-```bash
-npm install
-npx expo start
-```
+## Lancer le projet
+Le projet doit être ouvert dans un environnement disposant de Node.js et des outils Expo :
+1. `npm install`
+2. `npx expo start`
+3. Ouvrir le projet dans Expo Go, ou utiliser EAS Build pour produire une application native.
 
-Ouvrir ensuite le projet dans Expo Go en scannant le QR code affiché par Expo.
+## État et limites
+Cette version est une première base de développement, pas encore une application publiée ni un fichier iPhone installable. Les titres, nombres de chapitres et statuts sont des données de démonstration à vérifier. Les visuels de couverture sont temporaires. Il n'y a pas encore de compte utilisateur, de synchronisation cloud, de flux de nouveautés en direct ni de liens de lecture vérifiés. Aucun scan ou chapitre protégé n'est hébergé.
 
-## Feuille de route
-1. Vérifier et améliorer le prototype sur iPhone.
-2. Ajouter les liens de lecture vers des plateformes officielles, vérifiés par pays et par série.
-3. Ajouter un flux de nouveautés et des alertes de sorties.
-4. Créer un backend et un compte utilisateur pour synchroniser la bibliothèque.
-5. Ajouter la contribution communautaire avec modération des liens.
-6. Préparer les builds iOS/Android et la distribution.
-
-## Important
-Les séries et informations présentes sont des données de démonstration. Les couvertures sont des compositions typographiques temporaires. Cette version ne contient pas de scans et ne distribue aucun chapitre protégé. Les sorties en temps réel, les liens officiels vérifiés, les comptes, la synchronisation cloud et les notifications ne sont pas encore implémentés.
+## Prochaines étapes
+- Valider l'exécution du projet sur Expo Go
+- Ajouter des couvertures et métadonnées provenant de sources autorisées
+- Ajouter des liens officiels de lecture, vérifiés par pays
+- Mettre en place comptes et synchronisation cloud
+- Ajouter un système de propositions communautaires avec modération
+- Préparer et tester la distribution iOS et Android
