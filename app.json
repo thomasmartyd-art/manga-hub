@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "MANGA HUB",
+    "slug": "manga-hub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "mangahub",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.thomasmartyd.mangahub"
+    },
+    "android": {
+      "package": "com.thomasmartyd.mangahub"
+    }
+  }
+}
